@@ -1,6 +1,6 @@
 var SerialPort = require('serialport'),
-	serialPort = new SerialPort('/dev/ttyUSB0', {
-		baudrate: 19200
+	serialPort = new SerialPort('/dev/ttyprintk', {
+		baudRate: 19200
 	}),
 	Printer = require('thermalprinter');
 
