@@ -8,7 +8,7 @@ escpos.USB = require('escpos-usb')
 
 // Setup Thermal Printer
 const device  = new escpos.USB()
-const options = { encoding: "GB18030" }
+const options = { encoding: "GB18030", width: 32, lineWidth: 32 }
 const printer = new escpos.Printer(device, options)
 
 // Setup Johnny-Five for GPIO access
@@ -18,25 +18,27 @@ const board = new five.Board({
 
 
 board.on("ready", () => {
+  let story = pickAStory()
+  printStory(story)
   // Push button to start the print
   const btn = new five.Button({
       pin: "P1-18",
       isPullup: true
   })
 
-  // LED Matrix
-  const mtx = new five.Led.Matrix({
-    pins: {
-      data: 2,
-      clock: 3,
-      cs: 4
-    },
-    devices: 1
-  })
+  // // LED Matrix
+  // const mtx = new five.Led.Matrix({
+  //   pins: {
+  //     data: 2,
+  //     clock: 3,
+  //     cs: 4
+  //   },
+  //   devices: 1
+  // })
 
   btn.on("down", () => {
     // Animate the LED Matrix
-    ledMatrixTest(mtx)
+    // ledMatrixTest(mtx)
 
     // Pick a random story
     let story = pickAStory()
@@ -45,7 +47,7 @@ board.on("ready", () => {
     printStory(story)
 
     // Stop the LED Matrix
-    mtx.off()
+    // mtx.off()
   })
 })
 
@@ -68,18 +70,31 @@ const pickAStory = () => {
 }
 
 const printStory = (story) => {
-  device.open(function(error){
+  device.open((error) => {
+    if (error) {
+      console.log(error)
+      return
+    }
     printer
-    .font('a')
+    .feed()
+    .font('A')
     .align('ct')
-    .style('bu')
+    .style('normal')
     .size(1, 1)
     .text(story.title)
-    .text(story.author)
+    .newLine()
+    .size(0, 0)
+    .text(`by ${story.author}`)
+    .text(story.graduating)
+    .drawLine()
+    .align('lt')
     .text(story.text)
     .qrimage(story.URL, (err) => {
-      this.cut()
-      this.close()
+      if (err) {
+        console.log(err)
+        return
+      }
+      printer.cut().close()
     })
   })
 }
