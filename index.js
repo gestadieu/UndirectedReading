@@ -18,13 +18,13 @@ const board = new five.Board({
 
 
 board.on("ready", () => {
-  let story = pickAStory()
-  printStory(story)
+  
   // Push button to start the print
   const btn = new five.Button({
-      pin: "P1-18",
+      pin: "GPIO10", //"P1-18",
       isPullup: true
   })
+  
 
   // // LED Matrix
   // const mtx = new five.Led.Matrix({
@@ -37,6 +37,7 @@ board.on("ready", () => {
   // })
 
   btn.on("down", () => {
+    console.log("getting crazyyyyy....")
     // Animate the LED Matrix
     // ledMatrixTest(mtx)
 
@@ -44,7 +45,7 @@ board.on("ready", () => {
     let story = pickAStory()
 
     // Print on the thermal printer
-    printStory(story)
+   // printStory(story)
 
     // Stop the LED Matrix
     // mtx.off()
