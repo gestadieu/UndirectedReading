@@ -19,12 +19,11 @@ const board = new five.Board({
 
 board.on("ready", () => {
   
-  // Push button to start the print
+  // Push button to randomly print a story
   const btn = new five.Button({
-      pin: "GPIO10", //"P1-18",
+      pin: "P1-13", //GPIO02
       isPullup: true
   })
-  
 
   // // LED Matrix
   // const mtx = new five.Led.Matrix({
@@ -45,7 +44,7 @@ board.on("ready", () => {
     let story = pickAStory()
 
     // Print on the thermal printer
-   // printStory(story)
+   printStory(story)
 
     // Stop the LED Matrix
     // mtx.off()
@@ -64,7 +63,7 @@ const pickAStory = () => {
   if (rdNb.toString().length == 1) {
     rdNb = "0" + rdNb
   }
-  let rawdata = fs.readFileSync(`stories/text-${rdNb}.json`)
+  let rawdata = fs.readFileSync(`stories/story-${rdNb}.json`)
   let story = JSON.parse(rawdata)
   console.log(nbStories, story)
   return story
@@ -89,7 +88,7 @@ const printStory = (story) => {
     .text(story.graduating)
     .drawLine()
     .align('lt')
-    .text(story.text)
+    .text(`...${story.text}...`)
     .qrimage(story.URL, (err) => {
       if (err) {
         console.log(err)
