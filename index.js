@@ -11,14 +11,16 @@ const device  = new escpos.USB()
 const options = { encoding: "GB18030", width: 32, lineWidth: 32 }
 const printer = new escpos.Printer(device, options)
 
+const nbStories = fs.readdirSync('stories').length
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+let isPrinting = false
+
 // Setup Johnny-Five for GPIO access
 const board = new five.Board({
     io: new RaspiIO(),
 })
 
-
 board.on("ready", () => {
-  
   // Push button to randomly print a story
   const btn = new five.Button({
       pin: "P1-13", //GPIO02
@@ -35,8 +37,9 @@ board.on("ready", () => {
   //   devices: 1
   // })
 
-  btn.on("down", () => {
-    console.log("getting crazyyyyy....")
+  btn.on("down", async () => {
+    if (isPrinting) return
+    isPrinting = true
     // Animate the LED Matrix
     // ledMatrixTest(mtx)
 
@@ -44,8 +47,8 @@ board.on("ready", () => {
     let story = pickAStory()
 
     // Print on the thermal printer
-   printStory(story)
-
+    printStory(story)
+    await delay(3000)
     // Stop the LED Matrix
     // mtx.off()
   })
@@ -58,7 +61,6 @@ board.on("exit", () => {
 });
 
 const pickAStory = () => {
-  const nbStories = fs.readdirSync('stories').length
   let rdNb = Math.ceil(Math.random() * nbStories)
   if (rdNb.toString().length == 1) {
     rdNb = "0" + rdNb
@@ -69,8 +71,8 @@ const pickAStory = () => {
   return story
 }
 
-const printStory = (story) => {
-  device.open((error) => {
+const printStory = async (story) => {
+  await device.open((error) => {
     if (error) {
       console.log(error)
       return
@@ -95,6 +97,7 @@ const printStory = (story) => {
         return
       }
       printer.cut().close()
+      isPrinting = false
     })
   })
 }
