@@ -39,7 +39,6 @@ board.on("ready", () => {
 
   btn.on("down", async () => {
     if (isPrinting) delay(2000)
-    isPrinting = true
     // Animate the LED Matrix
     // ledMatrixTest(mtx)
 
@@ -47,6 +46,7 @@ board.on("ready", () => {
     let story = pickAStory()
 
     // Print on the thermal printer
+    isPrinting = true
     printStory(story)
     await delay(3000)
     // Stop the LED Matrix
