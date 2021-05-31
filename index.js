@@ -38,7 +38,7 @@ board.on("ready", () => {
   // })
 
   btn.on("down", async () => {
-    if (isPrinting) return
+    if (isPrinting) delay(2000)
     isPrinting = true
     // Animate the LED Matrix
     // ledMatrixTest(mtx)
