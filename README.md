@@ -13,7 +13,9 @@ sudo apt update
 sudo apt upgrade
 ### (password, hostname, gpio...)
 sudo raspi-config 
+### add source for latest nodejs
 curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -
+### install required extra packages
 sudo apt-get install build-essential libudev-dev git pigpio nodejs
 ```
 
@@ -22,6 +24,7 @@ sudo apt-get install build-essential libudev-dev git pigpio nodejs
 sudo npm install -g pm2 
 git clone https://github.com/gestadieu/UndirectedReading.git
 cd UndirectedReading
+npm install
 sudo pm2 ls
 sudo pm2 start index.js
 sudo pm2 startup systemd
