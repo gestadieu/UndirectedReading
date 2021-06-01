@@ -11,8 +11,17 @@ const device  = new escpos.USB()
 const options = { encoding: "GB18030", width: 32, lineWidth: 32 }
 const printer = new escpos.Printer(device, options)
 
-const nbStories = fs.readdirSync('stories').length
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+// const Datastore = require('nedb')
+// let db = {}
+// db.stories = new Datastore('data/stories.db');
+// db.stats = new Datastore('data/stats.db');
+// const nbStories = fs.readdirSync('stories').length
+
+let { stories } = require('./data/stories.json')
+const nbStories = stories.length;
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 let isPrinting = false
 
 // Setup Johnny-Five for GPIO access
@@ -38,7 +47,7 @@ board.on("ready", () => {
   // })
 
   btn.on("down", async () => {
-    if (isPrinting) delay(2000)
+    if (isPrinting) await sleep(2000)
     // Animate the LED Matrix
     // ledMatrixTest(mtx)
 
@@ -48,7 +57,7 @@ board.on("ready", () => {
     // Print on the thermal printer
     isPrinting = true
     printStory(story)
-    await delay(3000)
+    await sleep(3000)
     // Stop the LED Matrix
     // mtx.off()
   })
@@ -62,16 +71,16 @@ board.on("exit", () => {
 
 const pickAStory = () => {
   let rdNb = Math.ceil(Math.random() * nbStories)
+  return stories[rdNb]
   if (rdNb.toString().length == 1) {
     rdNb = "0" + rdNb
-  }
+  }  
   let rawdata = fs.readFileSync(`stories/story-${rdNb}.json`)
   let story = JSON.parse(rawdata)
-  console.log(nbStories, story)
   return story
 }
 
-const printStory = async (story) => {
+const printStory = async (story) => { //should return a Promise?
   await device.open((error) => {
     if (error) {
       console.log(error)

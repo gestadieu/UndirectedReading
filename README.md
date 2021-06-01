@@ -7,19 +7,24 @@
 Raspberry Pi setup
 ssh file
 wpa_.conf for wifi setup 
+
+```sh
 sudo apt update 
 sudo apt upgrade
-sudo raspi-config (password, gpio...)
-curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
-sudo apt-get install build-essential libudev-dev git nodejs 
+### (password, hostname, gpio...)
+sudo raspi-config 
+curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -
+sudo apt-get install build-essential libudev-dev git pigpio nodejs
+```
 
-sudo npm install -g pm2 (need sudo to access hardware in nodejs)
+```sh
+### (need sudo to access hardware in nodejs)
+sudo npm install -g pm2 
 git clone https://github.com/gestadieu/UndirectedReading.git
-
-cd ~/UndirectedReading
+cd UndirectedReading
 sudo pm2 ls
 sudo pm2 start index.js
 sudo pm2 startup systemd
 sudo pm2 save
-
+```
 
