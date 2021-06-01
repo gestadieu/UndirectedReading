@@ -1,8 +1,10 @@
 const fs = require("fs");
 
+// Johnny-Five framework to use Raspberry Pi GPIO in NodeJS
 const { RaspiIO } = require("raspi-io")
 const five = require("johnny-five");
 
+// ESC/POS USB Thermal Printer
 const escpos = require('escpos');
 escpos.USB = require('escpos-usb')
 
