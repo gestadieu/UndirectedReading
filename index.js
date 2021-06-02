@@ -93,7 +93,7 @@ const printStory = async (story) => { //should return a Promise?
     .font('A')
     .align('ct')
     .style('normal')
-    .size(1, 1)
+    .size(1, 0.6)
     .text(story.title)
     .newLine()
     .size(0, 0)
