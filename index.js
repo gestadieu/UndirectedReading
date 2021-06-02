@@ -1,12 +1,12 @@
-const fs = require("fs");
+const fs = require("fs")
 
 // Johnny-Five framework to use Raspberry Pi GPIO in NodeJS
 const { RaspiIO } = require("raspi-io")
 const five = require("johnny-five");
 
 // ESC/POS USB Thermal Printer
-const escpos = require('escpos');
-escpos.USB = require('escpos-usb')
+const escpos = require("escpos")
+escpos.USB = require("escpos-usb")
 
 // Setup Thermal Printer
 const device  = new escpos.USB()
@@ -18,8 +18,6 @@ const printer = new escpos.Printer(device, options)
 // let db = {}
 // db.stories = new Datastore('data/stories.db');
 // db.stats = new Datastore('data/stats.db');
-// const nbStories = fs.readdirSync('stories').length
-
 let { stories } = require('./data/stories.json')
 const nbStories = stories.length;
 
@@ -74,16 +72,16 @@ board.on("exit", () => {
 const pickAStory = () => {
   let rdNb = Math.ceil(Math.random() * nbStories)
   return stories[rdNb]
-  if (rdNb.toString().length == 1) {
-    rdNb = "0" + rdNb
-  }  
-  let rawdata = fs.readFileSync(`stories/story-${rdNb}.json`)
-  let story = JSON.parse(rawdata)
-  return story
+  // if (rdNb.toString().length == 1) {
+  //   rdNb = "0" + rdNb
+  // }  
+  // let rawdata = fs.readFileSync(`stories/story-${rdNb}.json`)
+  // let story = JSON.parse(rawdata)
+  // return story
 }
 
 const printStory = async (story) => { //should return a Promise?
-  await device.open((error) => {
+  device.open((error) => {
     if (error) {
       console.log(error)
       return
