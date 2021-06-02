@@ -1,4 +1,5 @@
 const fs = require("fs")
+// import random from 'random'
 
 // Johnny-Five framework to use Raspberry Pi GPIO in NodeJS
 const { RaspiIO } = require("raspi-io")
@@ -71,6 +72,7 @@ board.on("exit", () => {
 
 const pickAStory = () => {
   let rdNb = Math.ceil(Math.random() * nbStories)
+  // let rdNb = random.int((min = 1), (max = nbStories))
   return stories[rdNb]
   // if (rdNb.toString().length == 1) {
   //   rdNb = "0" + rdNb
