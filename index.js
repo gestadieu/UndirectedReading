@@ -3,7 +3,7 @@ const fs = require("fs")
 
 // Johnny-Five framework to use Raspberry Pi GPIO in NodeJS
 const { RaspiIO } = require("raspi-io")
-const five = require("johnny-five");
+const five = require("johnny-five")
 
 // ESC/POS USB Thermal Printer
 const escpos = require("escpos")
@@ -15,12 +15,20 @@ const options = { encoding: "GB18030", width: 32, lineWidth: 32 }
 const printer = new escpos.Printer(device, options)
 
 
-// const Datastore = require('nedb')
-// let db = {}
-// db.stories = new Datastore('data/stories.db');
-// db.stats = new Datastore('data/stats.db');
+const Datastore = require('nedb')
+let db = {}
+db.stories = new Datastore({ filename: 'data/stories.db', autoload: true})
+db.stats = new Datastore({filename: 'data/stats.db', autoload: true})
 let { stories } = require('./data/stories.json')
-const nbStories = stories.length;
+const nbStories = stories.length
+
+const migrateDB = (story, idx) => {
+  db.stories.insert({...story, ...{_id: }})
+}
+stories.forEach((story, idx) => {
+  console.log(story, idx)
+  // migrateDB(story, idx)
+})
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 let isPrinting = false
@@ -93,7 +101,7 @@ const printStory = async (story) => { //should return a Promise?
     .font('A')
     .align('ct')
     .style('normal')
-    .size(1, 0.6)
+    .size(0.5, 1)
     .text(story.title)
     .newLine()
     .size(0, 0)
