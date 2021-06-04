@@ -1,5 +1,6 @@
 const fs = require("fs")
-// import random from 'random'
+const Datastore = require("nedb")
+const random = require("random")
 
 // Johnny-Five framework to use Raspberry Pi GPIO in NodeJS
 const { RaspiIO } = require("raspi-io")
@@ -11,24 +12,13 @@ escpos.USB = require("escpos-usb")
 
 // Setup Thermal Printer
 const device  = new escpos.USB()
-const options = { encoding: "GB18030", width: 32, lineWidth: 32 }
+const options = { encoding: "utf8", width: 32, lineWidth: 32 }
 const printer = new escpos.Printer(device, options)
 
-
-const Datastore = require('nedb')
-let db = {}
-db.stories = new Datastore({ filename: 'data/stories.db', autoload: true})
-db.stats = new Datastore({filename: 'data/stats.db', autoload: true})
-let { stories } = require('./data/stories.json')
-const nbStories = stories.length
-
-const migrateDB = (story, idx) => {
-  db.stories.insert({...story, ...{_id: }})
-}
-stories.forEach((story, idx) => {
-  console.log(story, idx)
-  // migrateDB(story, idx)
-})
+// Setup NeDB datastore 
+let db = new Datastore({ filename: 'data/stories.db', autoload: true})
+let nbStories = 23
+db.count({}, (err, count) => nbStories = count)
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 let isPrinting = false
@@ -38,57 +28,52 @@ const board = new five.Board({
     io: new RaspiIO(),
 })
 
-board.on("ready", () => {
+board.on("ready", async () => {
   // Push button to randomly print a story
   const btn = new five.Button({
       pin: "P1-13", //GPIO02
       isPullup: true
   })
 
-  // // LED Matrix
-  // const mtx = new five.Led.Matrix({
-  //   pins: {
-  //     data: 2,
-  //     clock: 3,
-  //     cs: 4
-  //   },
-  //   devices: 1
-  // })
-
   btn.on("down", async () => {
-    if (isPrinting) await sleep(2000)
-    // Animate the LED Matrix
-    // ledMatrixTest(mtx)
+    if (isPrinting) await sleep(5000)
 
     // Pick a random story
-    let story = pickAStory()
+    let rdNb = Math.ceil(Math.random() * nbStories)
+    db.findOne({_id: rdNb}, async (err, doc) => {
+      if (err) return
+      // Print the story
+      isPrinting = true
+      printStory(doc.story)
+      // Increment the print counter for this story
+      doc.countPrint++
+      db.update({_id: doc._id}, doc)
+      await sleep(2000)
+    })
+  })
 
-    // Print on the thermal printer
-    isPrinting = true
-    printStory(story)
-    await sleep(3000)
-    // Stop the LED Matrix
-    // mtx.off()
+  board.repl.inject({
+    counters: () => viewCounters()
   })
 })
 
 board.on("exit", () => {
   console.log("leaving now...")
-  // clear LED Matrix
-  // clear printer?
 });
 
-const pickAStory = () => {
-  let rdNb = Math.ceil(Math.random() * nbStories)
+// const pickAStory = async () => {
+  // let rdNb = Math.ceil(Math.random() * nbStories)
   // let rdNb = random.int((min = 1), (max = nbStories))
-  return stories[rdNb]
+  // console.log(rdNb)
+  // await db.findOne({_id: rdNb}, (err, doc) => {return doc})
+  // return stories[rdNb]
   // if (rdNb.toString().length == 1) {
   //   rdNb = "0" + rdNb
   // }  
   // let rawdata = fs.readFileSync(`stories/story-${rdNb}.json`)
   // let story = JSON.parse(rawdata)
   // return story
-}
+// }
 
 const printStory = async (story) => { //should return a Promise?
   device.open((error) => {
@@ -97,7 +82,7 @@ const printStory = async (story) => { //should return a Promise?
       return
     }
     printer
-    .feed()
+    // .feed()
     .font('A')
     .align('ct')
     .style('normal')
@@ -110,7 +95,10 @@ const printStory = async (story) => { //should return a Promise?
     .drawLine()
     .align('lt')
     .text(`...${story.text}...`)
-    .qrimage(story.URL, (err) => {
+    .newLine()
+    .align('ct')
+    .text("<<Scan to read the full story>>")
+    .qrimage(story.URL, (err) => { //{ type: 's8', mode: 's8'},
       if (err) {
         console.log(err)
         return
@@ -121,18 +109,23 @@ const printStory = async (story) => { //should return a Promise?
   })
 }
 
-const ledMatrixTest = (mtx) => {
-  var heart = [
-    "01100110",
-    "10011001",
-    "10000001",
-    "10000001",
-    "01000010",
-    "00100100",
-    "00011000",
-    "00000000"
-  ];
-  mtx.draw(heart);
+// temporary migration
+// let { stories } = require('./data/stories.json')
+// stories.forEach((story, idx) => {
+//   db.insert({...{_id: idx+1},...{countPrint: 0},...{story}})
+// })
+
+const viewCounters = (isReset = false) => {
+  db.find({}, (err, docs) => {
+    docs.forEach(doc => {
+      console.log(doc._id, doc.countPrint)
+      if (isReset) {
+        console.log("resetting counters...")
+        doc.countPrint = 0;
+        db.update({_id: doc._id}, doc)
+      }
+    })
+  })
 }
 
 
