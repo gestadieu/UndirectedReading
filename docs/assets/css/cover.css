@@ -14,3 +14,15 @@ background-size: cover;
 .card-cover ul {
   visibility: hidden;
 }
+
+.ur-img-left {
+  margin: 0 0 20 20;
+}
+
+.ur-img-center {
+  margin: 20 0 20 0;
+}
+
+.ur-thumbnail {
+  width:300px; 
+}
