@@ -18,7 +18,7 @@ const printer = new escpos.Printer(device, options)
 // Setup NeDB datastore 
 let db = new Datastore({ filename: 'data/stories.db', autoload: true})
 let nbStories = 23
-db.count({}, (err, count) => nbStories = count)
+db.count({}, (err, count) => nbStories = count) //count actual number of stories
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 let isPrinting = false
@@ -35,7 +35,11 @@ board.on("ready", async () => {
       isPullup: true
   })
 
+  // LED inside the arcade button (btn)
+  const btnLed = new five.Led(11)
+
   btn.on("down", async () => {
+    btnLed.on()
     if (isPrinting) await sleep(5000)
 
     // Pick a random story
@@ -49,6 +53,7 @@ board.on("ready", async () => {
       doc.countPrint++
       db.update({_id: doc._id}, doc)
       await sleep(2000)
+      btnLed.off()
     })
   })
 

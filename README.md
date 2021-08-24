@@ -5,7 +5,9 @@
  Randomly print a student story on a thermal printer
 
 
-
+TODO:
+-create a full management REST API with ORM layer
+- npm i dotenv 
 
 Raspberry Pi setup
 
@@ -37,3 +39,16 @@ sudo pm2 startup systemd
 sudo pm2 save
 ```
 
+Reference
+https://learn.adafruit.com/mini-thermal-receipt-printer 
+https://learn.adafruit.com/instant-camera-using-raspberry-pi-and-thermal-printer/system-setup
+https://learn.adafruit.com/pi-thermal-printer/raspberry-pi-software-setup 
+
+
+
+https://jamesg.blog/2021/06/17/thermal-printer-part-1 
+https://www.npmjs.com/package/thermalprinter
+
+FRONTEND:
+https://www.snowpack.dev/ 
+https://getgrav.org/ 
