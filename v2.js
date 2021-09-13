@@ -7,7 +7,7 @@ const { RaspiIO } = require("raspi-io")
 const five = require("johnny-five")
 
 // ESC/POS USB Thermal Printer
-const escpos = require("escpos")
+const escpos = require("thermalprinter")
 escpos.USB = require("escpos-usb")
 
 // Setup Thermal Printer
@@ -40,9 +40,6 @@ board.on("ready", async () => {
 
   btn.on("down", async () => {
     btnLed.on()
-    console.log('button pressed...')
-    die
-    
     if (isPrinting) await sleep(5000)
 
     // Pick a random story

@@ -1,4 +1,7 @@
 const fs = require("fs")
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+
 const Datastore = require("nedb")
 const random = require("random")
 
@@ -6,14 +9,21 @@ const random = require("random")
 const { RaspiIO } = require("raspi-io")
 const five = require("johnny-five")
 
-// ESC/POS USB Thermal Printer
-const escpos = require("escpos")
-escpos.USB = require("escpos-usb")
+const SerialPort = require('serialport'),
+	serialPort = new SerialPort('/dev/ttyUSB0', {
+		baudRate: 9600,
+		charset: 0
+	}),
+	Printer = require('thermalprinter');
 
-// Setup Thermal Printer
-const device  = new escpos.USB()
-const options = { encoding: "utf8", width: 32, lineWidth: 32 }
-const printer = new escpos.Printer(device, options)
+let printer
+serialPort.on('open',function() {
+  printer = new Printer(serialPort);
+  printer.on('ready', function() {
+    console.log('we are all ready...')
+  })
+})
+
 
 // Setup NeDB datastore 
 let db = new Datastore({ filename: 'data/stories.db', autoload: true})
@@ -36,12 +46,14 @@ board.on("ready", async () => {
   })
 
   // LED inside the arcade button (btn)
-  const btnLed = new five.Led(11)
+  // const btnLed = new five.Led({
+  //   pin: "P1-11"
+  // })
+  // btnLed.off()
 
   btn.on("down", async () => {
-    btnLed.on()
+    // btnLed.on()
     console.log('button pressed...')
-    die
     
     if (isPrinting) await sleep(5000)
 
@@ -63,11 +75,14 @@ board.on("ready", async () => {
   board.repl.inject({
     counters: () => viewCounters()
   })
+
+  board.on("exit", () => {
+    // btnLed.off()
+    console.log("LED off, leaving now...")
+  })
 })
 
-board.on("exit", () => {
-  console.log("leaving now...")
-});
+
 
 // const pickAStory = async () => {
   // let rdNb = Math.ceil(Math.random() * nbStories)
@@ -83,38 +98,70 @@ board.on("exit", () => {
   // return story
 // }
 
-const printStory = async (story) => { //should return a Promise?
-  device.open((error) => {
-    if (error) {
-      console.log(error)
-      return
-    }
-    printer
-    // .feed()
-    .font('A')
-    .align('ct')
-    .style('normal')
-    .size(0.5, 1)
-    .text(story.title)
-    .newLine()
-    .size(0, 0)
-    .text(`by ${story.author}`)
-    .text(story.graduating)
-    .drawLine()
-    .align('lt')
-    .text(`...${story.text}...`)
-    .newLine()
-    .align('ct')
-    .text("<<Scan to read the full story>>")
-    .qrimage(story.URL, (err) => { //{ type: 's8', mode: 's8'},
-      if (err) {
-        console.log(err)
-        return
-      }
-      printer.cut().close()
-      isPrinting = false
-    })
-  })
+async function qrcode(URL) {
+  let qrcode = `qrencode -s 6 -l H -o - "${URL}" | lp -o fit-to-page`
+  const { stdout, stderr } = await exec(qrcode);
+  console.log('stdout:', stdout);
+  console.log('stderr:', stderr);
+}
+
+const printStory = async (story) => { 
+  printer
+			// .indent(10)
+			// .horizontalLine(16)
+			// .indent(10)
+      .printLine('')
+      .bold(true)
+      .center()
+			.printLine(story.title)
+			.bold(false)
+      .printLine(`by ${story.author}`)
+			.left()
+      .printLine('')
+			.printLine(`...${story.text}...`)
+      .printLine('')
+      .center()
+      .printLine("<<Scan to read the full story>>")
+      .printLine('')
+      .printLine('')
+      .left()
+			// .printImage(path)
+			.print(function() {
+        qrcode(story.URL)
+				console.log('printing done');
+				// process.exit();
+			});
+  // device.open((error) => {
+  //   if (error) {
+  //     console.log(error)
+  //     return
+  //   }
+  //   printer
+  //   // .feed()
+  //   .font('A')
+  //   .align('ct')
+  //   .style('normal')
+  //   .size(0.5, 1)
+  //   .text(story.title)
+  //   .newLine()
+  //   .size(0, 0)
+  //   .text(`by ${story.author}`)
+  //   .text(story.graduating)
+  //   .drawLine()
+  //   .align('lt')
+  //   .text(`...${story.text}...`)
+  //   .newLine()
+  //   .align('ct')
+  //   .text("<<Scan to read the full story>>")
+  //   .qrimage(story.URL, (err) => { //{ type: 's8', mode: 's8'},
+  //     if (err) {
+  //       console.log(err)
+  //       return
+  //     }
+  //     printer.cut().close()
+  //     isPrinting = false
+  //   })
+  // })
 }
 
 // temporary migration

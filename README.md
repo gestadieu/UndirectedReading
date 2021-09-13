@@ -42,11 +42,29 @@ sudo pm2 save
 Reference
 https://learn.adafruit.com/mini-thermal-receipt-printer 
 https://learn.adafruit.com/instant-camera-using-raspberry-pi-and-thermal-printer/system-setup
+sudo apt-get install git cups wiringpi build-essential libcups2-dev libcupsimage2-dev
+git clone https://github.com/adafruit/zj-58
+cd zj-58
+make
+sudo ./install
+
+(or ttyAMA0)
+sudo lpadmin -p ZJ-58 -E -v serial:/dev/ttyUSB0?baud=9600 -m zjiang/ZJ-58.ppd
+sudo lpoptions -d ZJ-58
+
+
 https://learn.adafruit.com/pi-thermal-printer/raspberry-pi-software-setup 
 
+sudo apt-get install git cups wiringpi build-essential libcups2-dev libcupsimage2-dev python-serial python-pil python-unidecode
 
+git clone https://github.com/adafruit/zj-58
+cd zj-58
+make
+sudo ./install
 
-https://jamesg.blog/2021/06/17/thermal-printer-part-1 
+sudo lpadmin -p ZJ-58 -E -v serial:/dev/serial0?baud=9600 -m zjiang/ZJ-58.ppd
+sudo lpoptions -d ZJ-58
+
 https://www.npmjs.com/package/thermalprinter
 
 FRONTEND:

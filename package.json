@@ -18,6 +18,7 @@
   "dependencies": {
     "@serialport/parser-inter-byte-timeout": "^9.0.7",
     "escpos": "^3.0.0-alpha.6",
+    "escpos-serialport": "^3.0.0-alpha.4",
     "escpos-usb": "^3.0.0-alpha.4",
     "johnny-five": "^2.0.0",
     "nedb": "^1.8.0",
