@@ -91,6 +91,7 @@ const qrcode = async (doc) => {
 }
 
 const printStory = async (doc) => { 
+  printer.reset()
   let story = doc.story
   // fix special characters
   story.title = story.title.replaceAll('’','\047')
