@@ -1,4 +1,7 @@
 const fs = require("fs")
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+
 const Datastore = require("nedb")
 const random = require("random")
 
@@ -6,14 +9,24 @@ const random = require("random")
 const { RaspiIO } = require("raspi-io")
 const five = require("johnny-five")
 
-// ESC/POS USB Thermal Printer
-const escpos = require("escpos")
-escpos.USB = require("escpos-usb")
+// Setup Johnny-Five for RPi GPIO access
+const board = new five.Board({
+  io: new RaspiIO(),
+})
 
-// Setup Thermal Printer
-const device  = new escpos.USB()
-const options = { encoding: "utf8", width: 32, lineWidth: 32 }
-const printer = new escpos.Printer(device, options)
+const SerialPort = require('serialport'),
+	serialPort = new SerialPort('/dev/ttyUSB0', {
+		baudRate: 9600,
+		charset: 0
+	}),
+	Printer = require('thermalprinter');
+
+serialPort.on('open',() => {
+  printer = new Printer(serialPort)
+  printer.on('ready', () => {
+    console.log('we are all ready...')
+  })
+})
 
 // Setup NeDB datastore 
 let db = new Datastore({ filename: 'data/stories.db', autoload: true})
@@ -23,27 +36,21 @@ db.count({}, (err, count) => nbStories = count) //count actual number of stories
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 let isPrinting = false
 
-// Setup Johnny-Five for GPIO access
-const board = new five.Board({
-    io: new RaspiIO(),
-})
-
 board.on("ready", async () => {
-  // Push button to randomly print a story
   const btn = new five.Button({
-      pin: "P1-13", //GPIO02
+      pin: "P1-15", 
       isPullup: true
   })
 
-  // LED inside the arcade button (btn)
-  const btnLed = new five.Led(11)
+  const btnLed = new five.Led("P1-11")
+  btnLed.blink()
+  await sleep(3000)
+  btnLed.stop().off()
 
-  btn.on("down", async () => {
+  btn.on("press", async () => {
+    if (isPrinting) return
+    console.log("pressed...")
     btnLed.on()
-    console.log('button pressed...')
-    die
-    
-    if (isPrinting) await sleep(5000)
 
     // Pick a random story
     let rdNb = Math.ceil(Math.random() * nbStories)
@@ -51,70 +58,67 @@ board.on("ready", async () => {
       if (err) return
       // Print the story
       isPrinting = true
-      printStory(doc.story)
-      // Increment the print counter for this story
+      await printStory(doc)
+      
       doc.countPrint++
       db.update({_id: doc._id}, doc)
-      await sleep(2000)
       btnLed.off()
+      isPrinting = false;
     })
   })
 
   board.repl.inject({
     counters: () => viewCounters()
   })
+
+  board.on("exit", () => {
+    btnLed.off()
+    console.log("LED off, leaving now...")
+  })
 })
 
-board.on("exit", () => {
-  console.log("leaving now...")
-});
-
 // const pickAStory = async () => {
-  // let rdNb = Math.ceil(Math.random() * nbStories)
-  // let rdNb = random.int((min = 1), (max = nbStories))
-  // console.log(rdNb)
-  // await db.findOne({_id: rdNb}, (err, doc) => {return doc})
-  // return stories[rdNb]
-  // if (rdNb.toString().length == 1) {
-  //   rdNb = "0" + rdNb
-  // }  
-  // let rawdata = fs.readFileSync(`stories/story-${rdNb}.json`)
-  // let story = JSON.parse(rawdata)
-  // return story
+//   let rdNb = Math.ceil(Math.random() * nbStories)
+//   // let rdNb = random.int((min = 1), (max = nbStories))
+//   await db.findOne({_id: rdNb}, (err, doc) => {return doc})
 // }
 
-const printStory = async (story) => { //should return a Promise?
-  device.open((error) => {
-    if (error) {
-      console.log(error)
-      return
-    }
-    printer
-    // .feed()
-    .font('A')
-    .align('ct')
-    .style('normal')
-    .size(0.5, 1)
-    .text(story.title)
-    .newLine()
-    .size(0, 0)
-    .text(`by ${story.author}`)
-    .text(story.graduating)
-    .drawLine()
-    .align('lt')
-    .text(`...${story.text}...`)
-    .newLine()
-    .align('ct')
-    .text("<<Scan to read the full story>>")
-    .qrimage(story.URL, (err) => { //{ type: 's8', mode: 's8'},
-      if (err) {
-        console.log(err)
-        return
-      }
-      printer.cut().close()
-      isPrinting = false
+const qrcode = async (doc) => {
+  // let cmd = `qrencode -s 6 -l H -o - "${doc.story.URL}" | lp -o fit-to-page`
+  let id = (doc._id < 10) ? `0${doc._id}` : doc._id
+  let cmd = `lp data/qrcodes/story-${id}.png`
+  const { stdout, stderr } = await exec(cmd);
+}
+
+const printStory = async (doc) => { 
+  let story = doc.story
+  // fix special characters
+  story.title = story.title.replaceAll('’','\047')
+  story.text = story.text.replaceAll('’','\047')
+  story.text = story.text.replaceAll('“', '\042')
+  story.text = story.text.replaceAll('”', '\042')
+
+  await printer
+    .printLine('')
+    .bold(true)
+    .center()
+    .printLine(story.title)
+    .bold(false)
+    .printLine(`by ${story.author}`)
+    .left()
+    .printLine('')
+    .printLine(`...${story.text}...`)
+    .printLine('')
+    .center()
+    .printLine("<<Scan to read the full story>>")
+    .printLine('')
+    .left()
+    // .printImage(qrcode)
+    .print(async () => {
+      await qrcode(doc)
+      // process.exit();
     })
-  })
+  await sleep(20000)
 }
 
 // temporary migration
@@ -135,5 +139,3 @@ const viewCounters = (isReset = false) => {
     })
   })
 }
-
-

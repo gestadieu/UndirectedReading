@@ -2,7 +2,8 @@
  This code is part of an installation to present the work of students during their Directed Reading class of 2021. Students are from Bachelor of Design, Bachelor of Fashion Design, Bachelor of Architecture and Bachelor of Communication and Media.
 
  The concept
- Randomly print a student story on a thermal printer
+ Randomly print an extract of a student's story on a thermal printer as well as
+ a QR code to scan and read online the full story with some illustrations.
 
 
 TODO:
