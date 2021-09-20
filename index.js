@@ -99,6 +99,17 @@ const printStory = async (doc) => {
   story.text = story.text.replaceAll('“', '\042')
   story.text = story.text.replaceAll('”', '\042')
 
+  // await printer
+  //   .printLine('')
+  //   .bold(true)
+  //   .center()
+  //   .printLine(story.title)
+  //   .bold(false)
+  //   .printLine(`by ${story.author}`)
+  //   .print()
+
+  // await qrcode(doc)
+
   await printer
     .printLine('')
     .bold(true)

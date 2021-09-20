@@ -29,44 +29,38 @@ serialPort.on('open',() => {
     //   process.exit()
     // })
     // PROBLEME: 16
-    db.findOne({_id:16}, async (err, doc) => {
+    db.find({_id: 1}, async (err, docs) => {
       if (err) return
-      let story = doc.story
-      // fix special characters
-      story.title = story.title.replaceAll('’','\047')
-      story.text = story.text.replaceAll('’','\047')
-      story.text = story.text.replaceAll('“', '\042')
-      story.text = story.text.replaceAll('”', '\042')
+      docs.forEach(doc => {
+        console.log(`printing ${doc._id}...`)
+        let story = doc.story
+        // fix special characters
+        story.title = story.title.replaceAll('’','\047')
+        story.text = story.text.replaceAll('’','\047')
+        story.text = story.text.replaceAll('“', '\042')
+        story.text = story.text.replaceAll('”', '\042')
 
-      await printer
-        .printLine('')
-        .bold(true)
-        .center()
-        .printLine(story.title)
-        .print()
-
-      await qrcode(doc)
-      printer
-        .printLine('')
-        .bold(true)
-        .center()
-        .printLine(story.title)
-        .bold(false)
-        .printLine(`by ${story.author}`)
-        .left()
-        .bold(false)
-        // .printLine('')
-        .printLine(`...${story.text}...`)
-        .printLine('')
-        .center()
-        .printLine(`by ${story.author}`)
-        .printLine('')
-        // .left()
-        // .printImage(qrcode)
-        .print(async () => {
-          // await qrcode(doc)
-          process.exit();
-        })
+        printer
+          .printLine('')
+          .bold(true)
+          .center()
+          .printLine(story.title)
+          .bold(false)
+          .printLine(`by ${story.author}`)
+          .left()
+          .printLine('')
+          .printLine(`...${story.text}...`)
+          .printLine('')
+          .center()
+          .printLine("<<Scan to read the full story>>")
+          .printLine('')
+          .left()
+          // .printImage(qrcode)
+          .print(async () => {
+            await qrcode(doc)
+            process.exit()
+          })
+      })
     })
 
 

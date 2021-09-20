@@ -20,7 +20,7 @@ serialPort.on('open', () => {
 
   })
 
-  db.find({}, (err, docs) => {
+  db.find({_id:16}, (err, docs) => {
     if (err) return
     console.log(docs.length)
     docs.forEach( async doc => {
@@ -38,9 +38,9 @@ serialPort.on('open', () => {
 
 const generateQRCode = async doc => {
   try {
-    let id = (doc._id < 10) ? `0${doc._id}` : doc._id
-    filename = `data/qrcodes/story-${id}.png`
-    await QRCode.toFile(filename, doc.story.URL, { type: "png", margin: 4, width: 384})
+    let id = (doc._id < 10) ? `000${doc._id}` : doc._id
+    filename = `data/qrcodes/story-0${id}.png`
+    await QRCode.toFile(filename, 'https://gestadieu.github.io/UndirectedReading/story-016.html', { type: "png", margin: 4, width: 384})
     return id
   } catch (err) {
     console.error(err)
