@@ -1,16 +1,12 @@
 const fs = require("fs")
 const Datastore = require("nedb")
 const random = require("random")
-
-// Johnny-Five framework to use Raspberry Pi GPIO in NodeJS
 const { RaspiIO } = require("raspi-io")
 const five = require("johnny-five")
-
-// ESC/POS USB Thermal Printer
 const escpos = require("escpos")
 escpos.USB = require("escpos-usb")
 
-// Setup Thermal Printer
+// Setup ESCPOS Thermal Printer
 const device  = new escpos.USB()
 const options = { encoding: "utf8", width: 32, lineWidth: 32 }
 const printer = new escpos.Printer(device, options)
@@ -83,37 +79,35 @@ board.on("exit", () => {
   // return story
 // }
 
-const printStory = async (story) => { //should return a Promise?
+const printStory = async story => { //should return a Promise?
   device.open((error) => {
     if (error) {
       console.log(error)
       return
     }
-    printer
-    // .feed()
-    .font('A')
-    .align('ct')
-    .style('normal')
-    .size(0.5, 1)
-    .text(story.title)
-    .newLine()
-    .size(0, 0)
-    .text(`by ${story.author}`)
-    .text(story.graduating)
-    .drawLine()
-    .align('lt')
-    .text(`...${story.text}...`)
-    .newLine()
-    .align('ct')
-    .text("<<Scan to read the full story>>")
-    .qrimage(story.URL, (err) => { //{ type: 's8', mode: 's8'},
-      if (err) {
-        console.log(err)
-        return
-      }
-      printer.cut().close()
-      isPrinting = false
+    const qrcode = path.join(__dirname, `/data/qrcodes/story-${doc._id}.png`)
+    escpos.Image.load(qrcode, function(image){
+
+
     })
+    printer
+      .font('A')
+      .align('CT')
+      .style('b')
+      .size(1,0.5)
+      .text(story.title)
+      .size(1, 0.5)
+      .text(`by ${story.author}`)
+      .text('')
+      .align('LT')
+      // .font('B')
+      .text(`... ${story.text} ...`)
+      .align('CT')
+      .text("<<Scan to read the full story>>")
+      .image(image, 'd24')
+      .then(() => { 
+        printer.control('LF').control('LF').close(); 
+      })
   })
 }
 
@@ -123,17 +117,6 @@ const printStory = async (story) => { //should return a Promise?
 //   db.insert({...{_id: idx+1},...{countPrint: 0},...{story}})
 // })
 
-const viewCounters = (isReset = false) => {
-  db.find({}, (err, docs) => {
-    docs.forEach(doc => {
-      console.log(doc._id, doc.countPrint)
-      if (isReset) {
-        console.log("resetting counters...")
-        doc.countPrint = 0;
-        db.update({_id: doc._id}, doc)
-      }
-    })
-  })
-}
+
 
 
