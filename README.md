@@ -7,10 +7,10 @@
 
 
 TODO:
-[x] basic command line report
-[ ] create a full management REST API with ORM layer
-[ ] npm i dotenv 
-[ ] store each print with date/time to get report per day
+- [x] basic command line report
+- [ ] create a full management REST API with ORM layer
+- [ ] npm i dotenv 
+- [ ] store each print with date/time to get report per day
 
 Raspberry Pi setup
 
