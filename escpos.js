@@ -1,11 +1,12 @@
-const escpos = require('escpos');
-escpos.USB = require('escpos-usb');
-const device  = new escpos.USB();
+const path = require('path')
+const escpos = require('escpos')
+escpos.USB = require('escpos-usb')
+const device  = new escpos.USB()
 // const device  = new escpos.Network('localhost');
 // const device  = new escpos.Serial('/dev/usb/lp0');
 
-const options = { encoding: "GB18030" }
-const printer = new escpos.Printer(device, options);
+// const options = { encoding: "GB18030" }
+const printer = new escpos.Printer(device)
 
 const Datastore = require("nedb")
 let db = new Datastore({ filename: 'data/stories.db', autoload: true})
@@ -16,26 +17,37 @@ device.open(function(error){
     if (err) return
     let story = doc.story
     // fix special characters
-    story.title = story.title.replaceAll('’','\047')
-    story.text = story.text.replaceAll('’','\047')
-    story.text = story.text.replaceAll('“', '\042')
-    story.text = story.text.replaceAll('”', '\042')
+    // story.title = story.title.replaceAll('’','\047')
+    // story.text = story.text.replaceAll('’','\047')
+    // story.text = story.text.replaceAll('“', '\042')
+    // story.text = story.text.replaceAll('”', '\042')
 
-    printer
-    .font('a')
-    .align('ct')
-    .style('b')
-    .size(1, 1)
-    .text(story.title)
-    .size(0.5)
-    .stile('')
-    .text(`by ${story.author}`)
-    .text(`... ${story.text} ...`)
-    .text("<<Scan to read the full story>>")
-    .qrimage(story.URL, (err) => {
-      printer.cut();
-      printer.close();
+    const qrcode = path.join(__dirname, `/data/qrcodes/story-${doc._id}.png`)
+    escpos.Image.load(qrcode, function(image){
+
+      printer
+      .font('A')
+      .align('CT')
+      .style('b')
+      .size(1,0.5)
+      .text(story.title)
+      .size(1, 0.5)
+      .text(`by ${story.author}`)
+      .text('')
+      .align('LT')
+      // .font('B')
+      .text(`... ${story.text} ...`)
+      .align('CT')
+      .text("<<Scan to read the full story>>")
+      .image(image, 'd24')
+      .then(() => { 
+        printer.control('LF').control('LF').close(); 
+      })
     })
+    // .qrimage(story.URL, (err) => {
+    //   printer.cut();
+    //   printer.close();
+    // })
   })  
 })
 
